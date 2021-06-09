@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <div>(建议使用Safari手机自带的浏览器打开体验更佳~)</div>
+    <div style="color: red">
+      (建议使用Safari手机自带的浏览器打开体验更佳哦~)
+    </div>
     <h2 style="margin-bottom: 40px">WebClip配置在线生成工具</h2>
     <el-form :model="formData">
       <el-form-item label="应用类型: " label-width="100px">
@@ -156,10 +158,11 @@ export default {
         ? `<key>Icon</key>
 			<data>${this.appIcon}</data>`
         : "";
-      var URL = this.formData.URL.length
-        ? `<key>URL</key>
-			<string>${this.formData.URL}</string>`
-        : "";
+      // URL是必填的 app的时候可以任意 因为跳转只是根据bundleId
+      var URL = `<key>URL</key>
+			<string>${
+        this.formData.URL.length ? this.formData.URL : "https://example.com"
+      }</string>`;
       var bundleId = this.formData.bundleId.length
         ? `<key>TargetApplicationBundleIdentifier</key>
           <string>${this.formData.bundleId}</string>`
@@ -213,6 +216,7 @@ export default {
 </dict>
 </plist>
 `;
+
       this.saveFile(`${this.formData.appName}.mobileconfig`, xmlText);
       this.loading = false;
     },
@@ -239,6 +243,8 @@ export default {
       obj.dispatchEvent(ev);
     },
     //保存文件
+    /*这里保存到手机沙盒 通过自带的文件.app打开一样可以安装描述文件 再就是这里最流畅的做法是上传至文件服务器
+    然后用Safari打开这个文件链接是最为完美的 ~!*/
     saveFile(name, data) {
       var urlObject = window.URL || window.webkitURL || window;
 
@@ -265,7 +271,7 @@ export default {
 .button-style {
   width: 300px;
   height: 50px;
-  font-size: 30px;
+  font-size: 20px;
   font-weight: 800px;
 }
 </style>
