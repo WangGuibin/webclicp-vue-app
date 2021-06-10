@@ -109,6 +109,7 @@ export default {
     return {
       loading: false,
       imagePath: "",
+      base64Icon: "",
       formData: {
         type: "web",
         appName: "",
@@ -116,19 +117,10 @@ export default {
         bundleId: "",
         appId: this.getUUID(),
         canDeleteDesktop: true,
-        base64Icon: "",
       },
     };
   },
-  computed: {
-    appIcon() {
-      return this.formData.base64Icon.replace(/^data:image\/\w+;base64,/, "");
-    },
-  },
   methods: {
-    handleChange(val) {
-      console.log(val);
-    },
     getUUID() {
       return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
         /[xy]/g,
@@ -155,6 +147,7 @@ export default {
       return url;
     },
     selectImageAction(e) {
+      var _this = this;
       var file = e.target.files[0];
       this.imagePath = this.getObjectURL(file);
       var reader = new FileReader();
@@ -162,7 +155,8 @@ export default {
         //通过文件流将文件转换成Base64字符串
         reader.readAsDataURL(file);
         reader.onloadend = function () {
-          this.formData.base64Icon = reader.result;
+          // console.log(reader.result);
+          _this.base64Icon = reader.result;
         };
       }
     },
@@ -188,11 +182,13 @@ export default {
       this.createXML();
     },
     createXML() {
-      var icon = this.appIcon.length
-        ? `<key>Icon</key>
-			<data>${this.appIcon}</data>`
-        : "";
-      // URL是必填的 app的时候可以任意 因为跳转只是根据bundleId
+      var base64Str = this.base64Icon.replace(/^data:image\/\w+;base64,/, "");
+      var iconXML =
+        base64Str && base64Str.length
+          ? `<key>Icon</key>
+			<data>${base64Str}</data>`
+          : "";
+      // URL是必填的
       var URL = `<key>URL</key>
 			<string>${
         this.formData.URL.length ? this.formData.URL : "https://foo.example.com"
@@ -210,7 +206,7 @@ export default {
 		<dict>
 			<key>FullScreen</key>
 			<true/>
-			${icon}
+			${iconXML}
 			<key>IgnoreManifestScope</key>
 			<true/>
 			<key>IsRemovable</key>
@@ -251,46 +247,47 @@ export default {
 </plist>
 `;
 
-      this.saveFile(`${this.formData.appName}.mobileconfig`, xmlText);
+      this.saveConfigFile(
+        xmlText,
+        "text/xml",
+        `${this.formData.appName}.mobileconfig`
+      );
       this.loading = false;
     },
-    //模拟点击
-    fake_click(obj) {
-      var ev = document.createEvent("MouseEvents");
-      ev.initMouseEvent(
-        "click",
-        true,
-        false,
-        window,
-        0,
-        0,
-        0,
-        0,
-        0,
-        false,
-        false,
-        false,
-        false,
-        0,
-        null
-      );
-      obj.dispatchEvent(ev);
-    },
-    //保存文件
-    /*这里保存到手机沙盒 通过自带的文件.app打开一样可以安装描述文件 再就是这里最流畅的做法是上传至文件服务器
-    然后用Safari打开这个文件链接是最为完美的 ~!*/
-    saveFile(name, data) {
-      var urlObject = window.URL || window.webkitURL || window;
 
-      var downloadData = new Blob([data]);
-
-      var save_link = document.createElementNS(
-        "http://www.w3.org/1999/xhtml",
-        "a"
-      );
-      save_link.href = urlObject.createObjectURL(downloadData);
-      save_link.download = name;
-      this.fake_click(save_link);
+    saveConfigFile(textValue, fileType, fileName) {
+      var blob;
+      if (typeof window.Blob == "function") {
+        blob = new Blob([textValue], {
+          type: fileType,
+        });
+      } else {
+        var BlobBuilder =
+          window.BlobBuilder ||
+          window.MozBlobBuilder ||
+          window.WebKitBlobBuilder ||
+          window.MSBlobBuilder;
+        var bb = new BlobBuilder();
+        bb.append(textValue);
+        blob = bb.getBlob(fileType);
+      }
+      var URL = window.URL || window.webkitURL;
+      var blobUrl = URL.createObjectURL(blob);
+      var archorDom = document.createElement("a");
+      if ("download" in archorDom) {
+        archorDom.style.visibility = "hidden";
+        archorDom.href = blobUrl;
+        archorDom.download = fileName;
+        document.body.appendChild(archorDom);
+        var evt = document.createEvent("MouseEvents");
+        evt.initEvent("click", true, true);
+        archorDom.dispatchEvent(evt);
+        document.body.removeChild(archorDom);
+      } else if (navigator.msSaveBlob) {
+        navigator.msSaveBlob(blob, fileName);
+      } else {
+        location.href = blobUrl;
+      }
     },
   },
 };
