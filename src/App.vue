@@ -1,9 +1,14 @@
 <template>
   <div id="app">
+    <h2 style="margin-bottom: 40px">WebClip配置在线生成工具</h2>
     <div style="color: red">
       (建议使用Safari手机自带的浏览器打开体验更佳哦~)
     </div>
-    <h2 style="margin-bottom: 40px">WebClip配置在线生成工具</h2>
+    <h6>功能介绍:</h6>
+    <ol>
+      <li>选择web类型就类似桌面书签</li>
+      <li>选择app类型即类似于新增一个app入口和图标副本</li>
+    </ol>
     <el-form :model="formData">
       <el-form-item label="应用类型: " label-width="100px">
         <el-radio-group v-model="formData.type">
@@ -19,9 +24,9 @@
       </el-form-item>
 
       <el-form-item
-        v-if="formData.type === 'web'"
-        label="URL地址: "
-        label-width="100px"
+        :label="
+          this.formData.type === 'web' ? 'URL地址: ' : 'Universal Link地址: '
+        "
       >
         <el-input
           v-model="formData.URL"
@@ -29,7 +34,28 @@
           placeholder="请输入URL地址"
         ></el-input>
       </el-form-item>
-
+      <div v-if="this.formData.type === 'app'">
+        <p>
+          苹果App的这个<a
+            href="https://developer.apple.com/library/archive/documentation/General/Conceptual/AppSearch/UniversalLinks.html#//apple_ref/doc/uid/TP40016308-CH12-SW1"
+            target="_blank"
+          >
+            universal link</a
+          >
+          URL地址具体如何获取尚未可知,只能是自己已知的去验证或者主流的App
+          例如微信(<a href="https://www.wechat.com" target="_blank"
+            >https://www.wechat.com</a
+          >) , 淘宝(<a href="https://b.mashort.cn" target="_blank"
+            >https://b.mashort.cn</a
+          >) <span> ~~~~~~ </span>
+          <a
+            href="https://search.developer.apple.com/appsearch-validation-tool/"
+            target="_blank"
+          >
+            苹果universal link验证入口
+          </a>
+        </p>
+      </div>
       <el-form-item
         v-if="formData.type === 'app'"
         label="bundleId: "
@@ -100,6 +126,9 @@ export default {
     },
   },
   methods: {
+    handleChange(val) {
+      console.log(val);
+    },
     getUUID() {
       return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
         /[xy]/g,
@@ -142,13 +171,18 @@ export default {
         this.$message.error("请输入应用名称(web/app的名字),再提交生成配置~");
         return;
       }
-      if (this.formData.type === "web" && this.formData.URL.length === 0) {
+      if (this.formData.URL.length === 0) {
         this.$message.error("请输入URL网址,再提交生成配置~");
         return;
       }
+
       if (this.formData.type === "app" && this.formData.bundleId.length === 0) {
         this.$message.error("请输入应用bundleId,再提交生成配置~");
         return;
+      }
+
+      if (this.formData.type === "web" && this.formData.URL.length !== 0) {
+        this.formData.bundleId = "";
       }
       this.loading = true;
       this.createXML();
@@ -161,7 +195,7 @@ export default {
       // URL是必填的 app的时候可以任意 因为跳转只是根据bundleId
       var URL = `<key>URL</key>
 			<string>${
-        this.formData.URL.length ? this.formData.URL : "https://example.com"
+        this.formData.URL.length ? this.formData.URL : "https://foo.example.com"
       }</string>`;
       var bundleId = this.formData.bundleId.length
         ? `<key>TargetApplicationBundleIdentifier</key>

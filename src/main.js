@@ -1,6 +1,15 @@
 import Vue from 'vue'
 import App from './App.vue'
-import { Button, Input, Switch, Form, FormItem, RadioGroup, Radio, Message } from 'element-ui';
+import {
+    Button,
+    Input,
+    Switch,
+    Form,
+    FormItem,
+    RadioGroup,
+    Radio,
+    Message
+} from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css'
 Vue.use(Button);
 Vue.use(Input);
