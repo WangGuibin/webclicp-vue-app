@@ -1,7 +1,7 @@
 #!/bin/bash
 
 git checkout git-pages
-git merge main
+git merge --strategy=theirs main
 cp -r ./dist/* ./
 rm -rf dist
 git add .
