@@ -25,13 +25,15 @@
 
       <el-form-item
         :label="
-          this.formData.type === 'web' ? 'URL地址: ' : 'Universal Link地址: '
+          this.formData.type === 'web'
+            ? 'URL地址: '
+            : 'Universal Link 或者 URL Scheme : '
         "
       >
         <el-input
           v-model="formData.URL"
           type="url"
-          placeholder="请输入URL地址"
+          placeholder="请输入link或者scheme"
         ></el-input>
       </el-form-item>
       <div v-if="this.formData.type === 'app'">
