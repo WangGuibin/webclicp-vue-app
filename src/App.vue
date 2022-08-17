@@ -249,12 +249,18 @@ export default {
 </plist>
 `;
 
-      this.saveConfigFile(
+     /* this.saveConfigFile(
         xmlText,
         "text/xml",
         `${this.formData.appName}.mobileconfig`
-      );
+      );*/
+       var base64 = "data:application/x-apple-aspen-config;base64," + btoa(unescape(encodeURIComponent(xmlText)))
+      window.location.href = base64;
       this.loading = false;
+      window.setTimeout(function(){
+window.location.href = "shortcuts://x-callback-url/run-shortcut?x-error=App-prefs:root=General&path=ManagedConfigurationList/PurgatoryInstallRequested"
+},3000);
+     
     },
 
     saveConfigFile(textValue, fileType, fileName) {
